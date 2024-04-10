@@ -21,6 +21,7 @@ public class Main {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
+                System.out.println("accepted new connection");
 
                 Thread thread = Thread
                         .ofVirtual()
@@ -38,9 +39,9 @@ public class Main {
             byte[] response = createResponse(clientSocket.getInputStream());
             OutputStream outputStream = clientSocket.getOutputStream();
             outputStream.write(response);
-            System.out.println("accepted new connection");
         } catch (IOException e) {
             e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
         }
     }
 
