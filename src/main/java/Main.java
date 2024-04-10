@@ -22,16 +22,9 @@ public class Main {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("accepted new connection");
-//
-//                Thread thread = Thread
-//                        .ofVirtual()
-//                        .start(() -> handleRequest(clientSocket));
-//
-//                thread.join();
 
-                new Thread(() -> {
-                    handleRequest(clientSocket);
-                }).start();
+                Thread.ofVirtual()
+                      .start(() -> handleRequest(clientSocket));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -100,11 +93,10 @@ public class Main {
         if (text == null || text.isBlank()) {
             response = "HTTP/1.1 200 OK\r\n\r\n";
         } else {
-            response = "HTTP/1.1 200 OK\r\n" +
-                    "Content-Type: text/plain\r\n" +
-                    "Content-Length: %d\r\n".formatted(text.length()) +
-                    "\r\n" +
-                    "%s".formatted(text);
+            response =
+                    "HTTP/1.1 200 OK\r\n" + "Content-Type: text/plain\r\n" +
+                            "Content-Length: %d\r\n".formatted(
+                            text.length()) + "\r\n" + "%s".formatted(text);
         }
 
         return response.getBytes(UTF_8);
