@@ -5,8 +5,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -53,9 +56,17 @@ public class Main {
     }
 
     private static String[] lines(InputStream inputStream) throws IOException {
-        return new BufferedReader(new InputStreamReader(inputStream))
-                .readLine()
-                .split("\r\n");
+        BufferedReader br = new BufferedReader(
+                new InputStreamReader(inputStream));
+
+        List<String> strings = new ArrayList<>();
+        String line = br.readLine();
+        while (!line.isEmpty()) {
+            strings.add(line);
+            line = br.readLine();
+        }
+
+        return strings.toArray(String[]::new);
     }
 
     private static Map<String, String> headers(String[] in) {
