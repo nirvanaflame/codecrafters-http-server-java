@@ -22,14 +22,18 @@ public class Main {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("accepted new connection");
+//
+//                Thread thread = Thread
+//                        .ofVirtual()
+//                        .start(() -> handleRequest(clientSocket));
+//
+//                thread.join();
 
-                Thread thread = Thread
-                        .ofVirtual()
-                        .start(() -> handleRequest(clientSocket));
-
-                thread.join();
+                new Thread(() -> {
+                    handleRequest(clientSocket);
+                }).start();
             }
-        } catch (InterruptedException | IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
