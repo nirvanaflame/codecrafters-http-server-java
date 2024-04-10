@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -17,22 +16,31 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Logs from your program will appear here!");
 
-        ServerSocket serverSocket = null;
-        Socket clientSocket = null;
-
-        try {
-            serverSocket = new ServerSocket(4221);
+        try (ServerSocket serverSocket = new ServerSocket(4221)) {
             serverSocket.setReuseAddress(true);
-            clientSocket = serverSocket.accept();
 
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+
+                Thread thread = Thread
+                        .ofVirtual()
+                        .start(() -> handleRequest(clientSocket));
+
+                thread.join();
+            }
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void handleRequest(Socket clientSocket) {
+        try {
             byte[] response = createResponse(clientSocket.getInputStream());
-
             OutputStream outputStream = clientSocket.getOutputStream();
             outputStream.write(response);
-
             System.out.println("accepted new connection");
         } catch (IOException e) {
-            System.out.println("IOException: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
