@@ -1,6 +1,7 @@
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -18,14 +19,11 @@ public class Main {
             clientSocket = serverSocket.accept(); // Wait for connection from
             // client.
 
-            InputStream inputStream = clientSocket.getInputStream();
+            OutputStream outputStream = clientSocket.getOutputStream();
 
-            DataOutputStream dataOutputStream = new DataOutputStream(
-                    clientSocket.getOutputStream());
+            byte[] message = "HTTP/1.1 200 OK\r\n\r\n".getBytes(StandardCharsets.UTF_8);
 
-            byte[] message = "HTTP/1.1 200 OK\r\n\r\n".getBytes(
-                    StandardCharsets.UTF_8);
-            dataOutputStream.write(message);
+            outputStream.write(message);
 
             System.out.println("accepted new connection");
         } catch (IOException e) {
