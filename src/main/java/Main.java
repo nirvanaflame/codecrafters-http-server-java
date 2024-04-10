@@ -18,25 +18,38 @@ public class Main {
         try {
             serverSocket = new ServerSocket(4221);
             serverSocket.setReuseAddress(true);
-            clientSocket = serverSocket.accept(); // Wait for connection from
-            // client.
+            clientSocket = serverSocket.accept();
 
             InputStream inputStream = clientSocket.getInputStream();
-
             String[] in = convertToString(inputStream);
 
             String path = in[1];
-            byte[] message = path.equals("/")
-                    ? "HTTP/1.1 200 OK\r\n\r\n".getBytes(UTF_8)
-                    : "HTTP/1.1 404 Not Found\r\n\r\n".getBytes(UTF_8);
+            byte[] response = createResponse(path);
 
             OutputStream outputStream = clientSocket.getOutputStream();
-            outputStream.write(message);
+            outputStream.write(response);
 
             System.out.println("accepted new connection");
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
         }
+    }
+
+    private static byte[] createResponse(String path) {
+        if (path.startsWith("/echo")) {
+            String text = path.split("/")[2];
+
+            return ("HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: text/plain\r\n" +
+                    "Content-Length: %d\r\n".formatted(text.length()) +
+                    "\r\n" +
+                    "%s".formatted(text))
+                    .getBytes(UTF_8);
+        }
+
+        return path.equals("/")
+                ? "HTTP/1.1 200 OK\r\n\r\n".getBytes(UTF_8)
+                : "HTTP/1.1 404 Not Found\r\n\r\n".getBytes(UTF_8);
     }
 
     private static String[] convertToString(InputStream inputStream) throws IOException {
