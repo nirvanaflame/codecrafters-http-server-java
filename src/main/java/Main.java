@@ -37,7 +37,7 @@ public class Main {
 
     private static byte[] createResponse(String path) {
         if (path.startsWith("/echo")) {
-            String text = path.split("/")[2];
+            String text = path.split("/echo/")[1];
 
             return ("HTTP/1.1 200 OK\r\n" +
                     "Content-Type: text/plain\r\n" +
