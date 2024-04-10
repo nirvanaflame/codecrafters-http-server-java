@@ -5,7 +5,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,33 +40,22 @@ public class Main {
         if (path.startsWith("/echo")) {
             String text = path.split("/echo/")[1];
 
-            return createOk(text);
+            return ok(text);
         }
 
         if (path.startsWith("/user-agent")) {
             String userAgent = headers(request).get("User-Agent");
 
-            return createOk(userAgent);
+            return ok(userAgent);
         }
 
-        return path.equals("/")
-                ? createOk("")
-                : "HTTP/1.1 404 Not Found\r\n\r\n".getBytes(UTF_8);
+        return path.equals("/") ? ok("") : notFound();
     }
 
-    private static byte[] createOk(String text) {
-        String response;
-        if (text.isBlank()) {
-            response = "HTTP/1.1 200 OK\r\n\r\n";
-        } else {
-            response = "HTTP/1.1 200 OK\r\n" +
-                    "Content-Type: text/plain\r\n" +
-                    "Content-Length: %d\r\n".formatted(text.length()) +
-                    "\r\n" +
-                    "%s".formatted(text);
-        }
-
-        return response.getBytes(UTF_8);
+    private static String[] lines(InputStream inputStream) throws IOException {
+        return new BufferedReader(new InputStreamReader(inputStream))
+                .readLine()
+                .split("\r\n");
     }
 
     private static Map<String, String> headers(String[] in) {
@@ -83,9 +71,22 @@ public class Main {
         return headers;
     }
 
-    private static String[] lines(InputStream inputStream) throws IOException {
-        return new BufferedReader(new InputStreamReader(inputStream))
-                .readLine()
-                .split("\r\n");
+    private static byte[] ok(String text) {
+        String response;
+        if (text == null || text.isBlank()) {
+            response = "HTTP/1.1 200 OK\r\n\r\n";
+        } else {
+            response = "HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: text/plain\r\n" +
+                    "Content-Length: %d\r\n".formatted(text.length()) +
+                    "\r\n" +
+                    "%s".formatted(text);
+        }
+
+        return response.getBytes(UTF_8);
+    }
+
+    private static byte[] notFound() {
+        return "HTTP/1.1 404 Not Found\r\n\r\n".getBytes(UTF_8);
     }
 }
