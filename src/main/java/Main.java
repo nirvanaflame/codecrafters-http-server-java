@@ -84,7 +84,7 @@ public class Main {
             if (optionalPath.isPresent()) {
                 String fileText = Files.lines(optionalPath.get())
                                       .collect(Collectors.joining("\n"));
-                return ok("2", "application/octet-stream");
+                return ok(fileText, "application/octet-stream");
             }
         }
 
