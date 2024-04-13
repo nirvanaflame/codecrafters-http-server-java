@@ -1,6 +1,8 @@
+import java.io.Serializable;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class HttpResponse {
+public class HttpResponse implements Serializable {
     StatusLine statusLine;
     Headers headers;
     Body body;

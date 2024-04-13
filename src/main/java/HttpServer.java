@@ -3,9 +3,12 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class HttpServer {
+    public static ApplicationContext context;
+
     static Environment env;
 
     public static void main(String... args) {
+        context = new ApplicationContext();
         env = Environment.fromArgs(args);
         System.out.println("Logs from your program will appear here!");
 
@@ -28,19 +31,12 @@ public class HttpServer {
         try {
             HttpRequest httpRequest = new HttpRequest(clientSocket.getInputStream());
 
-            String path = httpRequest.getPath();
-            HttpRequest.RequestLine.Method method = httpRequest.getMethod();
-
-            HttpResponse httpResponse = switch (path) {
-                case String p when p.equals("/") -> HttpResponse.ok();
-                case String p when p.startsWith("/echo") -> Handlers.echo(httpRequest);
-                case String p when p.startsWith("/user-agent") -> Handlers.userAgent(httpRequest);
-                case String p when p.startsWith("/files") &&
-                    method == HttpRequest.RequestLine.Method.GET -> Handlers.readFile(httpRequest);
-                case String p when p.startsWith("/files") &&
-                    method == HttpRequest.RequestLine.Method.POST -> Handlers.writeFile(httpRequest);
-                default -> HttpResponse.notFound();
-            };
+            var handlers = context.getHandlers();
+            HttpResponse httpResponse = handlers.stream()
+                                       .filter(h -> h.canHandle(httpRequest))
+                                       .findFirst()
+                                       .map(h -> h.handle(httpRequest))
+                                       .orElseGet(HttpResponse::notFound);
 
             System.out.println("handleRequest:: response: " + httpResponse);
             clientSocket.getOutputStream()
