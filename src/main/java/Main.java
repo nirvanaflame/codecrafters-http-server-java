@@ -86,6 +86,7 @@ public class Main {
                                       .collect(Collectors.joining("\n"));
                 return ok(fileText, "application/octet-stream");
             } else {
+                System.out.println("file not found");
                 return notFound();
             }
         }
