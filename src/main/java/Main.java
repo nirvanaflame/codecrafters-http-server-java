@@ -139,7 +139,7 @@ public class Main {
         }
 
         String response = "HTTP/1.1 200 OK\r\n" +
-                "Content-Type: %s\r\n" + contentType +
+                "Content-Type: %s\r\n".formatted(contentType) +
                 "Content-Length: %d\r\n".formatted(text.length()) +
                 "\r\n" +
                 "%s".formatted(text);
