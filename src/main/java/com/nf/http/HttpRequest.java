@@ -1,3 +1,5 @@
+package com.nf.http;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,20 +18,24 @@ public class HttpRequest {
             this.headers = new Headers(br);
             this.body = new Body(br);
         } catch (IOException e) {
-            System.err.println("Cannot construct HttpRequest: " + e.getMessage());
+            System.err.println("Cannot construct com.nf.http.HttpRequest: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
-    String getPath() {
+    public String getPath() {
         return requestLine.path;
     }
 
-    RequestLine.Method getMethod() {
+    public RequestLine.Method getMethod() {
         return requestLine.method;
     }
 
-    Body getBody() {
+    public Headers getHeaders() {
+        return headers;
+    }
+
+    public Body getBody() {
         return body;
     }
 

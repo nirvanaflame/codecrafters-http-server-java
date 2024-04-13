@@ -1,18 +1,26 @@
+package com.nf.http;
+
+import com.nf.Application;
+import com.nf.ApplicationContext;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class HttpServer {
-    public static ApplicationContext context;
 
-    static Environment env;
+    int port;
+    ApplicationContext context;
 
-    public static void main(String... args) {
-        context = new ApplicationContext();
-        env = Environment.fromArgs(args);
+    public HttpServer(int port) {
+        this.port = port;
+    }
+
+    public void start() {
         System.out.println("Logs from your program will appear here!");
+        this.context = Application.getContext();
 
-        try (ServerSocket serverSocket = new ServerSocket(4221)) {
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
             serverSocket.setReuseAddress(true);
 
             while (true) {
@@ -27,7 +35,7 @@ public class HttpServer {
         }
     }
 
-    private static void handleRequest(Socket clientSocket) {
+    private void handleRequest(Socket clientSocket) {
         try {
             HttpRequest httpRequest = new HttpRequest(clientSocket.getInputStream());
 

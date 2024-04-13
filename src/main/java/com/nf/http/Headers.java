@@ -1,3 +1,5 @@
+package com.nf.http;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,7 +27,7 @@ public class Headers {
                              .collect(Collectors.toList());
     }
 
-    static Headers withEmptyBody() {
+    public static Headers withEmptyBody() {
         Headers head = new Headers();
         head.withContentLength(0);
         head.withContentType(ContentType.TEXT_PLAIN);

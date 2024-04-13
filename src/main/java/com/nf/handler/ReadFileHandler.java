@@ -1,3 +1,11 @@
+package com.nf.handler;
+
+import com.nf.Application;
+import com.nf.Environment;
+import com.nf.http.Headers;
+import com.nf.http.HttpRequest;
+import com.nf.http.HttpResponse;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,7 +22,8 @@ public class ReadFileHandler implements HttpRequestHandler {
     }
 
     @Override public HttpResponse handle(HttpRequest request) {
-        String dirName = HttpServer.env.getValue(DIRECTORY);
+        String dirName = Application.getEnv().getValue(DIRECTORY);
+
         String path = request.getPath();
         String fileName = path.split("/files/")[1];
 

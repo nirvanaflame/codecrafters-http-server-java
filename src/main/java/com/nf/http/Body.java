@@ -1,3 +1,5 @@
+package com.nf.http;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 
@@ -17,7 +19,7 @@ public class Body {
         }
 
         this.content = sb.toString();
-        System.out.println("Body:: init: " + content);
+        System.out.println("com.nf.http.Body:: init: " + content);
     }
 
     public static Body of(String content) {

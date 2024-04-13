@@ -1,3 +1,5 @@
+package com.nf.http;
+
 import java.io.Serializable;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -7,7 +9,7 @@ public class HttpResponse implements Serializable {
     Headers headers;
     Body body;
 
-    HttpResponse(StatusLine statusLine, Headers headers, Body body) {
+    public HttpResponse(StatusLine statusLine, Headers headers, Body body) {
         this.statusLine = statusLine; this.headers = headers; this.body = body;
     }
 
