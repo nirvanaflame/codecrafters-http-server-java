@@ -146,14 +146,11 @@ public class Main {
             return "HTTP/1.1 200 OK\r\n\r\n".getBytes(UTF_8);
         }
 
-        String response = STR."""
-            HTTP/1.1 200 OK\r
-            Content-Type: \{contentType}\r
-            Content-Length: \{text.length()}\r
-            \r
-            \{text}
-            """.trim();
-
+        String response = "HTTP/1.1 200 OK\r\n" +
+            "Content-Type: %s\r\n".formatted(contentType) +
+            "Content-Length: %d\r\n".formatted(text.length()) +
+            "\r\n" +
+            "%s".formatted(text);
         return response.getBytes(UTF_8);
     }
 
