@@ -1,7 +1,6 @@
 package com.nf.handler;
 
 import com.nf.Application;
-import com.nf.Environment;
 import com.nf.http.Body;
 import com.nf.http.HttpRequest;
 import com.nf.http.HttpResponse;
@@ -14,12 +13,14 @@ import java.nio.file.StandardOpenOption;
 public class WriteFileHandler implements HttpRequestHandler {
     public static final String DIRECTORY = "--directory";
 
-    @Override public boolean canHandle(HttpRequest request) {
+    @Override
+    public boolean canHandle(HttpRequest request) {
         return request.getPath().startsWith("/files")
             && request.getMethod() == HttpRequest.RequestLine.Method.POST;
     }
 
-    @Override public HttpResponse handle(HttpRequest request) {
+    @Override
+    public HttpResponse handle(HttpRequest request) {
         String dirName = Application.getEnv().getValue(DIRECTORY);
         String path = request.getPath();
         String fileName = path.split("/files/")[1];

@@ -24,7 +24,7 @@ public class Headers {
 
     Headers(Pair... pairs) {
         this.headers = Arrays.stream(pairs)
-                             .collect(Collectors.toList());
+            .collect(Collectors.toList());
     }
 
     public static Headers withEmptyBody() {
@@ -58,13 +58,14 @@ public class Headers {
 
     public String getValue(String key) {
         return this.headers.stream()
-                           .filter(pair -> pair.key.equals(key))
-                           .findFirst()
-                           .map(Pair::value)
-                           .orElse(null);
+            .filter(pair -> pair.key.equals(key))
+            .findFirst()
+            .map(Pair::value)
+            .orElse(null);
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return this.headers
             .stream()
             .map(Pair::toString)
@@ -83,7 +84,8 @@ public class Headers {
     }
 
     record Pair(String key, String value) {
-        @Override public String toString() {
+        @Override
+        public String toString() {
             return "%s: %s".formatted(key, value);
         }
     }

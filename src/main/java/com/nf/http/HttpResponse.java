@@ -10,12 +10,14 @@ public class HttpResponse implements Serializable {
     Body body;
 
     public HttpResponse(StatusLine statusLine, Headers headers, Body body) {
-        this.statusLine = statusLine; this.headers = headers; this.body = body;
+        this.statusLine = statusLine;
+        this.headers = headers;
+        this.body = body;
     }
 
     public byte[] getBytes() {
         return this.toString()
-                   .getBytes(UTF_8);
+            .getBytes(UTF_8);
     }
 
     public static HttpResponse ok() {
@@ -41,7 +43,8 @@ public class HttpResponse implements Serializable {
         return new HttpResponse(StatusLine.notFound(), Headers.withEmptyBody(), Body.empty());
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "%s\r\n%s\r\n\r\n%s".formatted(statusLine.toString(), headers.toString(), body.toString());
     }
 
@@ -60,7 +63,8 @@ public class HttpResponse implements Serializable {
             return new StatusLine(HTTP_VERSION, 404, "Not Found");
         }
 
-        @Override public String toString() {
+        @Override
+        public String toString() {
             return "%s %d %s".formatted(version, code, status);
         }
     }

@@ -28,7 +28,7 @@ public class HttpServer {
                 System.out.println("accepted new connection");
 
                 Thread.ofVirtual()
-                      .start(() -> handleRequest(clientSocket));
+                    .start(() -> handleRequest(clientSocket));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -41,14 +41,14 @@ public class HttpServer {
 
             var handlers = context.getHandlers();
             HttpResponse httpResponse = handlers.stream()
-                                       .filter(h -> h.canHandle(httpRequest))
-                                       .findFirst()
-                                       .map(h -> h.handle(httpRequest))
-                                       .orElseGet(HttpResponse::notFound);
+                .filter(h -> h.canHandle(httpRequest))
+                .findFirst()
+                .map(h -> h.handle(httpRequest))
+                .orElseGet(HttpResponse::notFound);
 
             System.out.println("handleRequest:: response: " + httpResponse);
             clientSocket.getOutputStream()
-                        .write(httpResponse.getBytes());
+                .write(httpResponse.getBytes());
         } catch (IOException e) {
             System.err.println(e.getMessage());
             throw new RuntimeException(e);

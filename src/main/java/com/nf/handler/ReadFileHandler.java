@@ -1,7 +1,6 @@
 package com.nf.handler;
 
 import com.nf.Application;
-import com.nf.Environment;
 import com.nf.http.Headers;
 import com.nf.http.HttpRequest;
 import com.nf.http.HttpResponse;
@@ -16,12 +15,23 @@ import java.util.Optional;
 public class ReadFileHandler implements HttpRequestHandler {
     private static final String DIRECTORY = "--directory";
 
-    @Override public boolean canHandle(HttpRequest request) {
+    private static List<String> readAllLines(Path p) {
+        try {
+            return Files.readAllLines(p);
+        } catch (IOException e) {
+            System.err.println("cannot read file");
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public boolean canHandle(HttpRequest request) {
         return request.getPath().startsWith("/files")
             && request.getMethod() == HttpRequest.RequestLine.Method.GET;
     }
 
-    @Override public HttpResponse handle(HttpRequest request) {
+    @Override
+    public HttpResponse handle(HttpRequest request) {
         String dirName = Application.getEnv().getValue(DIRECTORY);
 
         String path = request.getPath();
@@ -41,15 +51,6 @@ public class ReadFileHandler implements HttpRequestHandler {
         }
 
         return result.map(s -> HttpResponse.ok(s, Headers.ContentType.APPLICATION_OCTET_STREAM))
-                     .orElseGet(HttpResponse::notFound);
-    }
-
-    private static List<String> readAllLines(Path p) {
-        try {
-            return Files.readAllLines(p);
-        } catch (IOException e) {
-            System.err.println("cannot read file");
-            return Collections.emptyList();
-        }
+            .orElseGet(HttpResponse::notFound);
     }
 }

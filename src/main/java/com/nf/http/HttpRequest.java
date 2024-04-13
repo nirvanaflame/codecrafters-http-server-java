@@ -39,7 +39,8 @@ public class HttpRequest {
         return body;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "%s\r\n%s\r\n\r\n%s".formatted(requestLine.toString(), headers.toString(), body.toString());
     }
 
@@ -65,7 +66,8 @@ public class HttpRequest {
             POST
         }
 
-        @Override public String toString() {
+        @Override
+        public String toString() {
             return "%s %s %s".formatted(method.name(), path, version);
         }
     }
