@@ -150,6 +150,9 @@ public class Main {
     }
 
     private static byte[] notFound() {
-        return "HTTP/1.1 404 Not Found\r\n\r\n".getBytes(UTF_8);
+        String message = "HTTP/1.1 404 Not Found\r\n" +
+                "Content-Length: 0\r\n" +
+                "\r\n";
+        return message.getBytes(UTF_8);
     }
 }
