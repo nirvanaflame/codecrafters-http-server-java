@@ -5,15 +5,19 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String... args) {
         System.out.println("Logs from your program will appear here!");
 
         try (ServerSocket serverSocket = new ServerSocket(4221)) {
@@ -24,16 +28,17 @@ public class Main {
                 System.out.println("accepted new connection");
 
                 Thread.ofVirtual()
-                      .start(() -> handleRequest(clientSocket));
+                      .start(() -> handleRequest(clientSocket, args));
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void handleRequest(Socket clientSocket) {
+    private static void handleRequest(Socket clientSocket, String... args) {
         try {
-            byte[] response = createResponse(clientSocket.getInputStream());
+            byte[] response = createResponse(clientSocket.getInputStream(),
+                                             args);
             OutputStream outputStream = clientSocket.getOutputStream();
             outputStream.write(response);
         } catch (IOException e) {
@@ -42,7 +47,8 @@ public class Main {
         }
     }
 
-    private static byte[] createResponse(InputStream inputStream) throws IOException {
+    private static byte[] createResponse(InputStream inputStream, String[] args)
+            throws IOException {
         String[] request = lines(inputStream);
 
         String path = request[0].split(" ")[1];
@@ -56,6 +62,30 @@ public class Main {
             String userAgent = headers(request).get("User-Agent");
 
             return ok(userAgent);
+        }
+
+        if (path.startsWith("/files")) {
+            String fileName = path.split("/files/")[1];
+
+            int i = indexOf("--directory", args);
+            String dirName = args[i + 1];
+
+            System.out.println("/files: dirname:" + dirName);
+            System.out.println("/files: fileName:" + fileName);
+
+            Optional<Path> optionalPath = Files
+                    .walk(Path.of(dirName))
+                    .peek(System.out::println)
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.endsWith(fileName))
+                    .findFirst();
+
+
+            if (optionalPath.isPresent()) {
+                String fileText = Files.lines(optionalPath.get())
+                                      .collect(Collectors.joining("\n"));
+                return ok("2", "application/octet-stream");
+            }
         }
 
         return path.equals("/") ? ok("") : notFound();
@@ -88,17 +118,31 @@ public class Main {
         return headers;
     }
 
+    private static int indexOf(String key, String... array) {
+        int i = 0;
+        while (i < array.length) {
+            if (key.equals(array[i])) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
     private static byte[] ok(String text) {
-        String response;
+        return ok(text, "text/plain");
+    }
+
+    private static byte[] ok(String text, String contentType) {
         if (text == null || text.isBlank()) {
-            response = "HTTP/1.1 200 OK\r\n\r\n";
-        } else {
-            response =
-                    "HTTP/1.1 200 OK\r\n" + "Content-Type: text/plain\r\n" +
-                            "Content-Length: %d\r\n".formatted(
-                            text.length()) + "\r\n" + "%s".formatted(text);
+            return "HTTP/1.1 200 OK\r\n\r\n".getBytes(UTF_8);
         }
 
+        String response = "HTTP/1.1 200 OK\r\n" +
+                "Content-Type: %s\r\n" + contentType +
+                "Content-Length: %d\r\n".formatted(text.length()) +
+                "\r\n" +
+                "%s".formatted(text);
         return response.getBytes(UTF_8);
     }
 
