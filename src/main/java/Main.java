@@ -8,10 +8,11 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -37,8 +38,7 @@ public class Main {
 
     private static void handleRequest(Socket clientSocket, String... args) {
         try {
-            byte[] response = createResponse(clientSocket.getInputStream(),
-                                             args);
+            byte[] response = createResponse(clientSocket.getInputStream(), args);
             OutputStream outputStream = clientSocket.getOutputStream();
             outputStream.write(response);
         } catch (IOException e) {
@@ -47,54 +47,57 @@ public class Main {
         }
     }
 
-    private static byte[] createResponse(InputStream inputStream, String[] args)
-            throws IOException {
+    private static byte[] createResponse(InputStream inputStream, String[] args) throws IOException {
         String[] request = lines(inputStream);
 
-        String path = request[0].split(" ")[1];
-        if (path.startsWith("/echo")) {
-            String text = path.split("/echo/")[1];
+        String[] requestLine = request[0].split(" ");
+        String method = requestLine[0];
+        String path = requestLine[1];
 
-            return ok(text);
-        }
-
-        if (path.startsWith("/user-agent")) {
-            String userAgent = headers(request).get("User-Agent");
-
-            return ok(userAgent);
-        }
-
-        if (path.startsWith("/files")) {
-            String fileName = path.split("/files/")[1];
-
-            int i = indexOf("--directory", args);
-            String dirName = args[i + 1];
-
-            Optional<Path> optionalPath = Files
-                    .walk(Path.of(dirName))
-                    .filter(Files::isRegularFile)
-                    .filter(p -> p.endsWith(fileName))
-                    .findFirst();
-
-
-            if (optionalPath.isPresent()) {
-                String fileText = Files
-                        .readAllLines(optionalPath.get())
-                        .stream()
-                        .collect(Collectors.joining("\n"));
-
-                return ok(fileText, "application/octet-stream");
-            } else {
-                return notFound();
+        switch (path) {
+            case String p when p.equals("/") -> ok();
+            case String p when p.startsWith("/echo") -> ok(path.split("/echo/")[1]);
+            case String p when p.startsWith("/user-agent") -> ok(headers(request).get("User-Agent"));
+            case String p when p.startsWith("/files") && method.equals("GET") -> {
+                String fileContent = readFile(path, args);
+                return fileContent.isEmpty() ? notFound() : ok(fileContent, "application/octet-stream");
             }
+            case String p when p.startsWith("/files") && method.equals("POST") -> {
+
+            }
+            default -> notFound();
         }
 
         return path.equals("/") ? ok("") : notFound();
     }
 
+    private static String readFile(String path, String... args) throws IOException {
+        String fileName = path.split("/files/")[1];
+
+        int i = indexOf("--directory", args);
+        String dirName = args[i + 1];
+
+        return Files
+            .walk(Path.of(dirName))
+            .filter(Files::isRegularFile)
+            .filter(p -> p.endsWith(fileName))
+            .map(p -> readAllLines(p))
+            .flatMap(Collection::stream)
+            .collect(Collectors.joining("\n"));
+    }
+
+    private static List<String> readAllLines(Path p) {
+        try {
+            return Files.readAllLines(p);
+        } catch (IOException e) {
+            System.out.println("cannot read file");
+            return Collections.emptyList();
+        }
+    }
+
     private static String[] lines(InputStream inputStream) throws IOException {
         BufferedReader br = new BufferedReader(
-                new InputStreamReader(inputStream));
+            new InputStreamReader(inputStream));
 
         List<String> strings = new ArrayList<>();
         String line = br.readLine();
@@ -130,6 +133,10 @@ public class Main {
         return -1;
     }
 
+    private static byte[] ok() {
+        return ok("");
+    }
+
     private static byte[] ok(String text) {
         return ok(text, "text/plain");
     }
@@ -139,18 +146,21 @@ public class Main {
             return "HTTP/1.1 200 OK\r\n\r\n".getBytes(UTF_8);
         }
 
-        String response = "HTTP/1.1 200 OK\r\n" +
-                "Content-Type: %s\r\n".formatted(contentType) +
-                "Content-Length: %d\r\n".formatted(text.length()) +
-                "\r\n" +
-                "%s".formatted(text);
+        String response = STR."""
+            HTTP/1.1 200 OK\r
+            Content-Type: \{contentType}\r
+            Content-Length: \{text.length()}\r
+            \r
+            \{text}
+            """.trim();
+
         return response.getBytes(UTF_8);
     }
 
     private static byte[] notFound() {
         String message = "HTTP/1.1 404 Not Found\r\n" +
-                "Content-Length: 0\r\n" +
-                "\r\n";
+            "Content-Length: 0\r\n" +
+            "\r\n";
         return message.getBytes(UTF_8);
     }
 }
