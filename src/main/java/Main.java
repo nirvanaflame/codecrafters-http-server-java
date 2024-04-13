@@ -7,7 +7,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -54,21 +56,31 @@ public class Main {
         String method = requestLine[0];
         String path = requestLine[1];
 
-        switch (path) {
+        return switch (path) {
             case String p when p.equals("/") -> ok();
             case String p when p.startsWith("/echo") -> ok(path.split("/echo/")[1]);
             case String p when p.startsWith("/user-agent") -> ok(headers(request).get("User-Agent"));
             case String p when p.startsWith("/files") && method.equals("GET") -> {
                 String fileContent = readFile(path, args);
-                return fileContent.isEmpty() ? notFound() : ok(fileContent, "application/octet-stream");
+                yield fileContent.isEmpty() ? notFound() : ok(fileContent, "application/octet-stream");
             }
             case String p when p.startsWith("/files") && method.equals("POST") -> {
+                String filePath = getFilePath(args, path);
 
+                String body = body(request);
+                System.out.println(body);
+
+                yield writeFile(filePath, body) ? created() : notFound();
             }
             default -> notFound();
-        }
+        };
+    }
 
-        return path.equals("/") ? ok("") : notFound();
+    private static String getFilePath(String[] args, String path) {
+        String fileName = path.split("/files/")[1];
+        int i = indexOf("--directory", args);
+        String dirName = args[i + 1];
+        return dirName + "/" + fileName;
     }
 
     private static String readFile(String path, String... args) throws IOException {
@@ -84,6 +96,16 @@ public class Main {
             .map(p -> readAllLines(p))
             .flatMap(Collection::stream)
             .collect(Collectors.joining("\n"));
+    }
+
+    private static boolean writeFile(String filePath, String content) {
+        try {
+            Files.writeString(Path.of(filePath), content, StandardOpenOption.CREATE);
+            return true;
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
     }
 
     private static List<String> readAllLines(Path p) {
@@ -122,6 +144,12 @@ public class Main {
         return headers;
     }
 
+    private static String body(String[] request) {
+        System.out.println(Arrays.toString(request));
+
+        return Arrays.stream(request).skip(3).collect(Collectors.joining("\n"));
+    }
+
     private static int indexOf(String key, String... array) {
         int i = 0;
         while (i < array.length) {
@@ -152,6 +180,13 @@ public class Main {
             "\r\n" +
             "%s".formatted(text);
         return response.getBytes(UTF_8);
+    }
+
+    private static byte[] created() {
+        String message = "HTTP/1.1 201 Created\r\n" +
+            "Content-Length: 0\r\n" +
+            "\r\n";
+        return message.getBytes(UTF_8);
     }
 
     private static byte[] notFound() {
