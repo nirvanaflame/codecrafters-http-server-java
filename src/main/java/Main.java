@@ -85,6 +85,8 @@ public class Main {
                 String fileText = Files.lines(optionalPath.get())
                                       .collect(Collectors.joining("\n"));
                 return ok(fileText, "application/octet-stream");
+            } else {
+                return notFound();
             }
         }
 
