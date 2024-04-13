@@ -70,23 +70,21 @@ public class Main {
             int i = indexOf("--directory", args);
             String dirName = args[i + 1];
 
-            System.out.println("/files: dirname:" + dirName);
-            System.out.println("/files: fileName:" + fileName);
-
             Optional<Path> optionalPath = Files
                     .walk(Path.of(dirName))
-                    .peek(System.out::println)
                     .filter(Files::isRegularFile)
                     .filter(p -> p.endsWith(fileName))
                     .findFirst();
 
 
             if (optionalPath.isPresent()) {
-                String fileText = Files.lines(optionalPath.get())
-                                      .collect(Collectors.joining("\n"));
+                String fileText = Files
+                        .readAllLines(optionalPath.get())
+                        .stream()
+                        .collect(Collectors.joining("\n"));
+
                 return ok(fileText, "application/octet-stream");
             } else {
-                System.out.println("file not found");
                 return notFound();
             }
         }
