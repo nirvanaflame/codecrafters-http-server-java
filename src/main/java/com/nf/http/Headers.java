@@ -83,11 +83,21 @@ public class Headers {
     private static Pair filterRequestHeader(String... s) {
         if (allowedHeaders.contains(s[0])) {
             return switch (s[0]) {
-                case ACCEPT_ENCODING -> Encoding.contains(s[1]) ? new Pair(CONTENT_ENCODING, s[1]) : null;
+                case ACCEPT_ENCODING -> mapMulti(s);
                 default -> new Pair(s[0], s[1]);
             };
         }
         return null;
+    }
+
+    private static Pair mapMulti(String... s) {
+        var split = s[1].split(", ");
+        var value = Arrays.stream(split)
+            .filter(Encoding::contains)
+            .distinct()
+            .collect(Collectors.joining(", "));
+
+        return new Pair(CONTENT_ENCODING, value);
     }
 
     public String getValue(String key) {
