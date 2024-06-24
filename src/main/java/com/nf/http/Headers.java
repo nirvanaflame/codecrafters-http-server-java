@@ -14,6 +14,9 @@ public class Headers {
     private static final String CONTENT_LENGTH = "Content-Length";
     private static final String CONTENT_ENCODING = "Content-Encoding";
     private static final String ACCEPT_ENCODING = "Accept-Encoding";
+    private static final String USER_AGENT = "User-Agent";
+
+    private static final List<String> allowedHeaders = List.of(CONTENT_TYPE, CONTENT_LENGTH, CONTENT_ENCODING, ACCEPT_ENCODING, USER_AGENT);
 
     List<Pair> headers;
 
@@ -78,10 +81,13 @@ public class Headers {
     }
 
     private static Pair filterRequestHeader(String... s) {
-        return switch (s[0]) {
-            case ACCEPT_ENCODING -> Encoding.contains(s[1]) ? new Pair(CONTENT_ENCODING, s[1]) : null;
-            default -> null;
-        };
+        if (allowedHeaders.contains(s[0])) {
+            return switch (s[0]) {
+                case ACCEPT_ENCODING -> Encoding.contains(s[1]) ? new Pair(CONTENT_ENCODING, s[1]) : null;
+                default -> new Pair(s[0], s[1]);
+            };
+        }
+        return null;
     }
 
     public String getValue(String key) {
