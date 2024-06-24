@@ -13,6 +13,7 @@ public class HandlerEcho implements HttpRequestHandler {
     public HttpResponse handle(HttpRequest request) {
         String path = request.getPath();
         String value = path.split("/echo/")[1];
-        return HttpResponse.ok(value);
+        return HttpResponse.ok(value)
+            .withHeaders(request.getHeaders());
     }
 }

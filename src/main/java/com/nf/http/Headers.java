@@ -6,11 +6,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Headers {
 
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String CONTENT_LENGTH = "Content-Length";
+    private static final String CONTENT_ENCODING = "Content-Encoding";
+    private static final String ACCEPT_ENCODING = "Accept-Encoding";
 
     List<Pair> headers;
 
@@ -27,11 +30,21 @@ public class Headers {
             .collect(Collectors.toList());
     }
 
-    public static Headers withEmptyBody() {
+    static Headers withEmptyBody() {
         Headers head = new Headers();
         head.withContentLength(0);
         head.withContentType(ContentType.TEXT_PLAIN);
         return head;
+    }
+
+    Headers appendHeaders(Headers headers) {
+        headers.stream()
+            .forEach(h -> {
+                if (!this.headers.contains(h)) {
+                    this.headers.add(h);
+                }
+            });
+        return this;
     }
 
     Headers withContentType(ContentType contentType) {
@@ -44,16 +57,31 @@ public class Headers {
         return this;
     }
 
+    Headers withContentEncoding(Encoding encoding) {
+        this.headers.add(new Pair(CONTENT_ENCODING, encoding.getEncoding()));
+        return this;
+    }
+
     private static Pair[] readHeaders(BufferedReader br) throws IOException {
         var lines = new ArrayList<Pair>();
         String line;
         while (!(line = br.readLine()).isEmpty()) {
             String[] s = line.split(": ");
-            lines.add(new Pair(s[0], s[1]));
+            var h = filterRequestHeader(s);
+            if (h != null) {
+                lines.add(h);
+            }
         }
         System.out.println("readHeader:: headers: " + lines);
 
         return lines.toArray(Pair[]::new);
+    }
+
+    private static Pair filterRequestHeader(String... s) {
+        return switch (s[0]) {
+            case ACCEPT_ENCODING -> Encoding.contains(s[1]) ? new Pair(CONTENT_ENCODING, s[1]) : null;
+            default -> null;
+        };
     }
 
     public String getValue(String key) {
@@ -64,12 +92,34 @@ public class Headers {
             .orElse(null);
     }
 
+    Stream<Pair> stream() {
+        return this.headers.stream();
+    }
+
     @Override
     public String toString() {
         return this.headers
             .stream()
             .map(Pair::toString)
             .collect(Collectors.joining("\r\n"));
+    }
+
+    public enum Encoding {
+        GZIP("gzip");
+
+        private final String encoding;
+
+        Encoding(String encoding) {
+            this.encoding = encoding;
+        }
+
+        public String getEncoding() {
+            return encoding;
+        }
+
+        public static boolean contains(String encoding) {
+            return Arrays.stream(values()).anyMatch(x -> x.encoding.equals(encoding));
+        }
     }
 
     public enum ContentType {

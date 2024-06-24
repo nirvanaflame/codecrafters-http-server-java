@@ -20,6 +20,11 @@ public class HttpResponse implements Serializable {
             .getBytes(UTF_8);
     }
 
+    public HttpResponse withHeaders(Headers headers) {
+        this.headers.appendHeaders(headers);
+        return this;
+    }
+
     public static HttpResponse ok() {
         return new HttpResponse(StatusLine.ok(), Headers.withEmptyBody(), Body.empty());
     }
